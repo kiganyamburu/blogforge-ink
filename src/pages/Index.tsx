@@ -12,6 +12,7 @@ import ReactMarkdown from "react-markdown";
 interface Post {
   id: string;
   title: string;
+  slug: string;
   excerpt: string;
   content: string;
   published_at: string;
@@ -166,7 +167,10 @@ const Index = () => {
                   </div>
 
                   <div>
-                    <h3 className="text-2xl font-bold mb-2 hover:text-primary cursor-pointer transition-colors">
+                    <h3 
+                      className="text-2xl font-bold mb-2 hover:text-primary cursor-pointer transition-colors"
+                      onClick={() => navigate(`/post/${post.slug}`)}
+                    >
                       {post.title}
                     </h3>
                     <p className="text-muted-foreground line-clamp-3">
@@ -174,7 +178,11 @@ const Index = () => {
                     </p>
                   </div>
 
-                  <Button variant="ghost" className="gap-2 px-0">
+                  <Button 
+                    variant="ghost" 
+                    className="gap-2 px-0"
+                    onClick={() => navigate(`/post/${post.slug}`)}
+                  >
                     Read More
                     <ArrowRight className="h-4 w-4" />
                   </Button>

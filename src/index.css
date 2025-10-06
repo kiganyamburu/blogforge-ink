@@ -114,4 +114,32 @@ All colors MUST be HSL.
   h1, h2, h3, h4, h5, h6 {
     @apply font-semibold tracking-tight;
   }
+  
+  .prose {
+    @apply text-foreground;
+  }
+  
+  .prose h1, .prose h2, .prose h3, .prose h4, .prose h5, .prose h6 {
+    @apply text-foreground;
+  }
+  
+  .prose a {
+    @apply text-primary hover:text-primary/80;
+  }
+  
+  .prose strong {
+    @apply text-foreground font-semibold;
+  }
+  
+  .prose code {
+    @apply bg-muted px-1.5 py-0.5 rounded text-sm;
+  }
+  
+  .prose pre {
+    @apply bg-muted p-4 rounded-lg overflow-x-auto;
+  }
+  
+  .prose blockquote {
+    @apply border-l-4 border-primary pl-4 italic text-muted-foreground;
+  }
 }
