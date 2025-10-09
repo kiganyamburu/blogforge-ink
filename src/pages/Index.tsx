@@ -17,6 +17,7 @@ interface Post {
   content: string;
   published_at: string;
   author_id: string;
+  featured_image: string | null;
   profiles: {
     username: string;
     full_name: string;
@@ -143,7 +144,19 @@ const Index = () => {
         ) : (
           <div className="max-w-4xl mx-auto space-y-8">
             {posts.map((post) => (
-              <Card key={post.id} className="hover:shadow-lg transition-shadow">
+              <Card key={post.id} className="hover:shadow-lg transition-shadow overflow-hidden">
+                {post.featured_image && (
+                  <div 
+                    className="w-full h-64 overflow-hidden cursor-pointer"
+                    onClick={() => navigate(`/post/${post.slug}`)}
+                  >
+                    <img
+                      src={post.featured_image}
+                      alt={post.title}
+                      className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                    />
+                  </div>
+                )}
                 <CardContent className="p-6 space-y-4">
                   <div className="flex items-center gap-3">
                     <Avatar className="h-10 w-10">

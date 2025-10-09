@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Save, Eye, Globe } from "lucide-react";
+import { ArrowLeft, Save, Eye, Globe, Upload, X } from "lucide-react";
 import { toast } from "sonner";
 import ReactMarkdown from "react-markdown";
 
@@ -17,6 +17,7 @@ export default function Editor() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [post, setPost] = useState({
     title: "",
     slug: "",
@@ -27,6 +28,7 @@ export default function Editor() {
     seo_description: "",
     seo_keywords: [] as string[],
     published_at: null as string | null,
+    featured_image: null as string | null,
   });
 
   useEffect(() => {
@@ -60,6 +62,7 @@ export default function Editor() {
         seo_description: data.seo_description || "",
         seo_keywords: data.seo_keywords || [],
         published_at: data.published_at,
+        featured_image: data.featured_image,
       });
     } catch (error: any) {
       toast.error("Failed to load post");
@@ -74,6 +77,52 @@ export default function Editor() {
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/^-+|-+$/g, "");
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Not authenticated");
+
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${session.user.id}/${Date.now()}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('post-images')
+        .upload(fileName, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('post-images')
+        .getPublicUrl(fileName);
+
+      setPost({ ...post, featured_image: publicUrl });
+      toast.success("Image uploaded successfully");
+    } catch (error: any) {
+      toast.error("Failed to upload image");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleRemoveImage = async () => {
+    if (!post.featured_image) return;
+
+    try {
+      const path = post.featured_image.split('/post-images/')[1];
+      if (path) {
+        await supabase.storage.from('post-images').remove([path]);
+      }
+      setPost({ ...post, featured_image: null });
+      toast.success("Image removed");
+    } catch (error) {
+      toast.error("Failed to remove image");
+    }
   };
 
   const handleSave = async (publishStatus?: string) => {
@@ -197,6 +246,47 @@ export default function Editor() {
               />
             </div>
 
+            <div className="space-y-2">
+              <Label htmlFor="featured-image">Featured Image</Label>
+              {post.featured_image ? (
+                <div className="relative">
+                  <img
+                    src={post.featured_image}
+                    alt="Featured"
+                    className="w-full h-48 object-cover rounded-lg"
+                  />
+                  <Button
+                    variant="destructive"
+                    size="icon"
+                    className="absolute top-2 right-2"
+                    onClick={handleRemoveImage}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              ) : (
+                <div className="border-2 border-dashed border-border rounded-lg p-6 text-center">
+                  <Input
+                    id="featured-image"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    disabled={uploading}
+                    className="hidden"
+                  />
+                  <label
+                    htmlFor="featured-image"
+                    className="cursor-pointer flex flex-col items-center gap-2"
+                  >
+                    <Upload className="h-8 w-8 text-muted-foreground" />
+                    <span className="text-sm text-muted-foreground">
+                      {uploading ? "Uploading..." : "Click to upload featured image"}
+                    </span>
+                  </label>
+                </div>
+              )}
+            </div>
+
             <div className="grid md:grid-cols-2 gap-6">
               <div className="space-y-2">
                 <Label htmlFor="content">Content (Markdown)</Label>
@@ -271,6 +361,13 @@ export default function Editor() {
             <Card>
               <CardContent className="p-8">
                 <article className="prose prose-lg dark:prose-invert max-w-none">
+                  {post.featured_image && (
+                    <img
+                      src={post.featured_image}
+                      alt={post.title}
+                      className="w-full h-64 object-cover rounded-lg mb-6"
+                    />
+                  )}
                   <h1>{post.title}</h1>
                   {post.excerpt && <p className="lead text-muted-foreground">{post.excerpt}</p>}
                   <ReactMarkdown>{post.content}</ReactMarkdown>

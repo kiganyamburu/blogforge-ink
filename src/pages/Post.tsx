@@ -13,6 +13,7 @@ interface Post {
   title: string;
   content: string;
   published_at: string;
+  featured_image: string | null;
   seo_title: string | null;
   seo_description: string | null;
   seo_keywords: string[] | null;
@@ -112,6 +113,14 @@ export default function Post() {
           <ArrowLeft className="h-4 w-4" />
           Back to Home
         </Button>
+
+        {post.featured_image && (
+          <img
+            src={post.featured_image}
+            alt={post.title}
+            className="w-full h-96 object-cover rounded-lg mb-8"
+          />
+        )}
 
         <header className="mb-12 space-y-6">
           <h1 className="text-4xl md:text-5xl font-bold leading-tight">
